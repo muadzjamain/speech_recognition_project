@@ -11,8 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearTranscriptionButton = document.getElementById('clearTranscriptionButton');
     const clearInterpretationButton = document.getElementById('clearInterpretationButton');
 
-    // Socket.io connection
-    const socket = io();
+
 
     // Variables for speech recognition
     let recognition;
@@ -35,26 +34,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // Event handler for speech recognition results
         recognition.onresult = (event) => {
             let interimTranscript = '';
-            
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
-                
                 if (event.results[i].isFinal) {
                     finalTranscript += transcript + ' ';
-                    // Process the transcript locally
-                    handleTranscription(transcript);
-                    // Add to transcription display
-                    transcriptionDiv.innerHTML += `<p>${transcript}</p>`;
+                    handleTranscription(transcript); // Process for commands and AI interpretation
+                    transcriptionDiv.innerHTML = `<p>${finalTranscript}</p>`; // Show the full final transcript
                 } else {
                     interimTranscript += transcript;
                 }
             }
-            
-            // Update transcription display
-            transcriptionDiv.innerHTML = `
-                <p>${finalTranscript}</p>
-                <p><i>${interimTranscript}</i></p>
-            `;
+            // Show interim results separately
+            const finalP = transcriptionDiv.querySelector('p:first-child') || document.createElement('p');
+            let interimP = transcriptionDiv.querySelector('p:last-child i');
+            if (!interimP) {
+                const p = document.createElement('p');
+                interimP = document.createElement('i');
+                p.appendChild(interimP);
+                transcriptionDiv.appendChild(p);
+            } else {
+                 interimP = interimP.parentElement;
+            }
+            finalP.innerHTML = finalTranscript;
+            interimP.innerHTML = `<i>${interimTranscript}</i>`;
         };
 
         // Event handlers for speech recognition
@@ -115,22 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         interpretationDiv.innerHTML = '';
     });
     
-    // Function to process text with Gemini API via backend
-    function processWithGemini(text) {
-        statusText.textContent = 'Processing with Gemini...';
-        socket.emit('interpret-text', text);
-    }
 
-    // Socket event handlers
-    socket.on('connect', () => {
-        console.log('Connected to server');
-        statusText.textContent = 'Ready';
-    });
-
-    socket.on('interpretation-result', (interpretation) => {
-        interpretationDiv.innerHTML += `<p>${interpretation}</p>`;
-        statusText.textContent = 'Ready';
-    });
     
     // Handle light/dark mode toggle
     function toggleMode(mode) {
@@ -149,22 +136,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Process transcription results
-    async function handleTranscription(text) {
-        // Check for light/dark mode commands
+    const handleTranscription = async (text) => {
+        if (!text.trim()) return;
+
+        // First, check for mode commands
         const lowerText = text.toLowerCase();
         if (lowerText.includes('close the light') || lowerText.includes('dark mode')) {
             toggleMode('dark');
         } else if (lowerText.includes('open the light') || lowerText.includes('light mode')) {
             toggleMode('light');
         }
-        
-        // Process with Gemini
-        await processWithGemini(text);
-    }
-    
-    socket.on('error', (errorMessage) => {
-        console.error('Server error:', errorMessage);
-        statusText.textContent = `Error: ${errorMessage}`;
-    });
+
+        // Then, send for AI interpretation
+        try {
+            const response = await fetch('/api/interpret', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            interpretationDiv.innerHTML = `<p>${data.interpretation}</p>`;
+        } catch (error) {
+            console.error('Error fetching interpretation:', error);
+            interpretationDiv.innerHTML = `<p class="error">Failed to get interpretation. Please try again.</p>`;
+        }
+    };
 });
