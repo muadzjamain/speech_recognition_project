@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Transcription & AI Interpretation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="light-mode">
+    <div class="container">
+        <main>
+            <header>
+                <h1>Voice Transcription & AI Interpretation</h1>
+                <p class="subtitle">Speak and get real-time transcription and AI interpretation</p>
+            </header>
+
+        <div class="controls">
+            <button id="startButton" class="control-button">
+                <i class="fas fa-microphone"></i> Start Recording
+            </button>
+            <button id="stopButton" class="control-button" disabled>
+                <i class="fas fa-stop"></i> Stop Recording
+            </button>
+        </div>
+
+        <div class="status-indicator">
+            <div id="recordingStatus" class="status-dot"></div>
+            <span id="statusText">Ready</span>
+        </div>
+
+        <div class="content-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Transcription</h2>
+                    <button id="clearTranscriptionButton" class="clear-button" title="Clear transcription">Clear</button>
+                </div>
+                <div id="transcription" class="content-box"></div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>AI Interpretation</h2>
+                    <button id="clearInterpretationButton" class="clear-button" title="Clear interpretation">Clear</button>
+                </div>
+                <div id="interpretation" class="content-box"></div>
+            </div>
+        </div>
+
+            <div class="mode-info">
+                <p>Say "close the light" for dark mode or "open the light" for light mode</p>
+                <div class="mode-indicator">
+                    <i id="modeIcon" class="fas fa-sun"></i>
+                    <span id="modeText">Light Mode</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="app.js"></script>
+</body>
+</html>
