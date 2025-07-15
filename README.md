@@ -1,3 +1,6 @@
+## Demo Link
+https://speechproject-group8.netlify.app/
+
 # Voice Transcription & AI Interpretation Demo
 
 A Node.js application that captures live voice input, transcribes it using Google Speech API, and interprets the transcribed text using Google's Gemini AI.
